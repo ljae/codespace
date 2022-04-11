@@ -1,15 +1,26 @@
+from pickletools import markobject
 import pandas as pd
 import streamlit as st
 import pandas as pd
 import pandas_datareader as pdr
+from pandas_datareader import data 
 import FinanceDataReader as fdr
 import datetime as dt
+import plotly.graph_objects as go
+from st_aggrid import GridOptionsBuilder, AgGrid, GridUpdateMode, DataReturnMode
 
-st.title("Private Finance Management Tool")
-st.header("Stock Price of APPLE")
+
+#df_nasdaq = fdr.StockListing('NASDAQ')
+#df_amex = fdr.StockListing('AMEX')
+#df_nyse = fdr.StockListing('NYSE')
+#nasdaq = df_nasdaq.Symbol.tolist()
+#amex = df_amex.Symbol.tolist()
+#nyse = df_nyse.Symbol.tolist()
+#tickers = nasdaq + amex + nyse
+
+#df_marketCap = data.get_quote_yahoo(tickers)['MarketCap'].sort_values(ascending=False)
 
 st.sidebar.header("**Jordan Rule For Esther**")
-
 #side bar user input
 startDate = st.sidebar.date_input('Start Date', dt.date(2021,1,1))
 endDate = st.sidebar.date_input('End Date', dt.datetime.now())
@@ -17,10 +28,6 @@ endDate = st.sidebar.date_input('End Date', dt.datetime.now())
 point = st.sidebar.selectbox("Quantitative Easing Status Point (%)",['2.5','5'])
 
 range_num = 11 
-
-#str to integer
-point = float(point)/100
-
 
 #get a price of AAPL thorugh pandas_Datareader
 df = fdr.DataReader(symbol='AAPL',start=startDate, end=endDate)
@@ -33,6 +40,16 @@ invest_point['#Check#'] = False
 invest_point.head()
 
 current_price = df['Close'][-1]
+
+
+st.title("Private Finance Management Tool")
+st.header("Stock Price of APPLE : "+str(current_price))
+
+
+
+#str to integer
+point = float(point)/100
+
 
 for i in range(range_num):
   invest_point.loc[i,['##Slot##']] = str(round(point*i*100,2))+'%'
@@ -49,10 +66,29 @@ for i in range(range_num):
 st.line_chart(df['Close'])
 
 #coloring the table
-def highlight_survived(s):
-    return ['background-color: green']*len(s) if s['#Check#'] == True  else ['background-color: red']*len(s)
+#def highlight_survived(s):
+    #return ['background-color: green']*len(s) if s['#Check#'] == True  else ['background-color: red']*len(s)
 
-st.dataframe(invest_point.style.apply(highlight_survived, axis=1))
+#st.dataframe(invest_point.style.apply(highlight_survived, axis=1))
+
+gb = GridOptionsBuilder.from_dataframe(invest_point)
+gb.configure_side_bar() #Add a sidebar
+gridOptions = gb.build()
+
+grid_response = AgGrid(
+    invest_point,
+    gridOptions=gridOptions,
+    data_return_mode='AS_INPUT', 
+    update_mode='MODEL_CHANGED', 
+    fit_columns_on_grid_load=False,
+    theme='blue', #Add theme color to the table
+    enable_enterprise_modules=True,
+    height=350, 
+    width='100%',
+    reload_data=True
+)
+
+
 
 nasdaq_index = fdr.DataReader(symbol='IXIC', start=dt.datetime.now()-dt.timedelta(30))
 
@@ -86,3 +122,23 @@ st.sidebar.markdown(invest_mode.TERM[0])
 
 st.sidebar.markdown('**Countiuous Ups**')
 st.sidebar.markdown(continuous_ups)
+
+#Data Set
+#countries=['India', 'Australia',
+           #'Japan', 'America',
+           #'Russia']
+ 
+#values = [4500, 2500, 1053, 500,
+          #3200]
+
+##The plot
+#fig = go.Figure(
+    #go.Pie(
+    #labels = countries,
+    #values = values,
+    #hoverinfo = "label+percent",
+    #textinfo = "value"
+#))
+
+#st.header("Pie chart")
+#st.plotly_chart(fig)
